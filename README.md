@@ -35,37 +35,61 @@ dotnet build
 
 ### Configuration
 
-1. Set your Anthropic API key:
+Configure your Anthropic API key using any of these methods:
+
+#### **Option 1: Environment Variable (Recommended)**
 ```bash
-export CLAUDECODE__ANTHROPIC__APIKEY="your-api-key"
+export ANTHROPIC_API_KEY="your-anthropic-api-key-here"
+# OR
+export CLAUDECODE__ANTHROPIC__APIKEY="your-anthropic-api-key-here"
 ```
 
-2. Or configure in `appsettings.json`:
+#### **Option 2: Configuration File**
+Copy `appsettings.example.json` to `appsettings.json` and update:
 ```json
 {
   "ClaudeCode": {
     "Anthropic": {
-      "ApiKey": "your-api-key"
+      "ApiKey": "your-anthropic-api-key-here"
     }
   }
 }
 ```
 
+#### **Option 3: User Secrets (Development)**
+```bash
+dotnet user-secrets set "ClaudeCode:Anthropic:ApiKey" "your-api-key" --project src/CyberdineDevelopment.ClaudeCode.CLI
+```
+
 ### Usage
 
-Start an interactive chat:
+#### **Single Message**
 ```bash
-dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI chat
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- chat -m "Explain async/await in C#"
 ```
 
-Send a single message:
+#### **Interactive Chat**
 ```bash
-dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI chat -m "Hello, Claude!"
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- chat
 ```
 
-List configured servers:
+#### **Specify Model**
 ```bash
-dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI server list
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- chat -m "Hello" --model claude-3-opus-20240229
+```
+
+#### **Server Management**
+```bash
+# List configured MCP servers
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- server list
+
+# Check server status
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- server status
+```
+
+#### **View Configuration**
+```bash
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- config show
 ```
 
 ## 🏗 Architecture

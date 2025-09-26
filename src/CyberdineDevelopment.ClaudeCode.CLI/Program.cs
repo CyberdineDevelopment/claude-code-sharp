@@ -14,6 +14,14 @@ namespace CyberdineDevelopment.ClaudeCode.CLI;
 
 internal static class Program
 {
+    private static IServiceProvider? _serviceProvider;
+
+    /// <summary>
+    /// Gets the current service provider.
+    /// </summary>
+    public static IServiceProvider ServiceProvider =>
+        _serviceProvider ?? throw new InvalidOperationException("Service provider not initialized");
+
     /// <summary>
     /// Application entry point.
     /// </summary>
@@ -23,14 +31,15 @@ internal static class Program
     {
         try
         {
-            var rootCommand = BuildRootCommand();
             var builder = Host.CreateApplicationBuilder(args);
-
             ConfigureServices(builder.Services, builder.Configuration);
 
             using var host = builder.Build();
+            _serviceProvider = host.Services;
+
             await host.StartAsync().ConfigureAwait(false);
 
+            var rootCommand = BuildRootCommand();
             return await rootCommand.InvokeAsync(args).ConfigureAwait(false);
         }
         catch (Exception ex)
@@ -75,8 +84,10 @@ internal static class Program
             var config = serviceProvider.GetRequiredService<IConfiguration>();
             var logger = serviceProvider.GetRequiredService<ILogger<AnthropicClient>>();
 
-            var apiKey = config["ClaudeCode:Anthropic:ApiKey"]
-                ?? throw new InvalidOperationException("Anthropic API key is not configured");
+            var apiKey = config["ClaudeCode:Anthropic:ApiKey"] ??
+                         Environment.GetEnvironmentVariable("CLAUDECODE__ANTHROPIC__APIKEY") ??
+                         Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ??
+                         "dummy-key-for-testing"; // Allow creation but will fail on actual use
 
             return new AnthropicClient(httpClient, apiKey, logger);
         });

@@ -1,4 +1,6 @@
 using System.CommandLine;
+using CyberdineDevelopment.ClaudeCode.CLI.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CyberdineDevelopment.ClaudeCode.CLI.Commands;
 
@@ -28,41 +30,80 @@ public sealed class ChatCommand : Command
         AddOption(modelOption);
         AddOption(serverOption);
 
-        this.SetHandler((string? message, string? model, string? server) =>
+        this.SetHandler(async (string? message, string? model, string? server) =>
         {
+            var chatService = Program.ServiceProvider.GetRequiredService<IChatService>();
+
             Console.WriteLine("Claude Code Chat");
             Console.WriteLine("================");
             Console.WriteLine();
 
             if (!string.IsNullOrEmpty(message))
             {
-                Console.WriteLine($"User: {message}");
-                Console.WriteLine("Assistant: This is a placeholder response. The full implementation would:");
-                Console.WriteLine("1. Connect to configured MCP servers");
-                Console.WriteLine("2. Send the message to Claude via Anthropic API");
-                Console.WriteLine("3. Stream the response back to the user");
-                Console.WriteLine();
+                await HandleSingleMessageAsync(chatService, message, model, server);
                 return;
             }
 
-            Console.WriteLine("Interactive chat mode (type 'exit' to quit):");
+            await HandleInteractiveChatAsync(chatService, model, server);
+        }, messageOption, modelOption, serverOption);
+    }
+
+    private static async Task HandleSingleMessageAsync(IChatService chatService, string message, string? model, string? server)
+    {
+        try
+        {
+            Console.WriteLine($"User: {message}");
+            Console.Write("Assistant: ");
+
+            var response = await chatService.SendMessageAsync(message, model, server);
+            Console.WriteLine(response);
             Console.WriteLine();
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"Error: Failed to connect to Claude API. {ex.Message}");
+            Console.WriteLine("Please check your API key configuration.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
 
-            while (true)
+    private static async Task HandleInteractiveChatAsync(IChatService chatService, string? model, string? server)
+    {
+        Console.WriteLine("Interactive chat mode (type 'exit' to quit):");
+        Console.WriteLine();
+
+        while (true)
+        {
+            Console.Write("You: ");
+            var userInput = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(userInput) || userInput.Equals("exit", StringComparison.OrdinalIgnoreCase))
             {
-                Console.Write("You: ");
-                var userInput = Console.ReadLine();
+                Console.WriteLine("Goodbye!");
+                break;
+            }
 
-                if (string.IsNullOrWhiteSpace(userInput) || userInput.Equals("exit", StringComparison.OrdinalIgnoreCase))
-                {
-                    Console.WriteLine("Goodbye!");
-                    break;
-                }
-
-                Console.WriteLine($"Assistant: You said '{userInput}'. This is a placeholder response.");
-                Console.WriteLine("The full implementation would process this through Claude with MCP tools.");
+            try
+            {
+                Console.Write("Assistant: ");
+                var response = await chatService.SendMessageAsync(userInput, model, server);
+                Console.WriteLine(response);
                 Console.WriteLine();
             }
-        }, messageOption, modelOption, serverOption);
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error: Failed to connect to Claude API. {ex.Message}");
+                Console.WriteLine("Please check your API key configuration.");
+                break;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine();
+            }
+        }
     }
 }
