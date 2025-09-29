@@ -60,6 +60,7 @@ internal static class Program
         rootCommand.AddCommand(new ChatCommand());
         rootCommand.AddCommand(new ServerCommand());
         rootCommand.AddCommand(new ConfigCommand());
+        rootCommand.AddCommand(AuthCommand.Create());
 
         return rootCommand;
     }
@@ -77,19 +78,42 @@ internal static class Program
 
         // HTTP Client for Anthropic API
         services.AddHttpClient();
-        services.AddTransient<IAnthropicClient>(serviceProvider =>
+
+        // Authentication Service
+        services.AddSingleton<IAuthenticationService>(serviceProvider =>
         {
             var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
             var httpClient = httpClientFactory.CreateClient();
+            var logger = serviceProvider.GetRequiredService<ILogger<AuthenticationService>>();
+            return new AuthenticationService(httpClient, logger);
+        });
+
+        // Anthropic Client Factory (chooses between API key or subscription)
+        services.AddTransient<IAnthropicClient>(serviceProvider =>
+        {
+            var httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
             var config = serviceProvider.GetRequiredService<IConfiguration>();
-            var logger = serviceProvider.GetRequiredService<ILogger<AnthropicClient>>();
+            var authService = serviceProvider.GetRequiredService<IAuthenticationService>();
+
+            // Check if user is authenticated with subscription
+            var authState = authService.GetAuthenticationStateAsync().Result;
+            if (authState.IsAuthenticated && authState.Method == AuthenticationMethod.Subscription)
+            {
+                var httpClient = httpClientFactory.CreateClient();
+                var logger = serviceProvider.GetRequiredService<ILogger<SubscriptionAnthropicClient>>();
+                return new SubscriptionAnthropicClient(httpClient, authService, logger);
+            }
+
+            // Fall back to API key authentication
+            var apiHttpClient = httpClientFactory.CreateClient();
+            var apiLogger = serviceProvider.GetRequiredService<ILogger<AnthropicClient>>();
 
             var apiKey = config["ClaudeCode:Anthropic:ApiKey"] ??
                          Environment.GetEnvironmentVariable("CLAUDECODE__ANTHROPIC__APIKEY") ??
                          Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ??
                          "dummy-key-for-testing"; // Allow creation but will fail on actual use
 
-            return new AnthropicClient(httpClient, apiKey, logger);
+            return new AnthropicClient(apiHttpClient, apiKey, apiLogger);
         });
 
         // MCP Services

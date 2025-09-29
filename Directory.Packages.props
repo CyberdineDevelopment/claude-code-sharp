@@ -3,7 +3,6 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
-
   <ItemGroup>
     <!-- Microsoft Core -->
     <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
@@ -16,17 +15,14 @@
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0" />
-
     <!-- System.CommandLine -->
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.CommandLine.Hosting" Version="0.4.0-alpha.22272.1" />
-
     <!-- JSON -->
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="9.0.9" />
     <PackageVersion Include="System.Text.Json" Version="9.0.0" />
-
     <!-- HTTP Client -->
     <PackageVersion Include="System.Net.Http" Version="4.3.4" />
-
     <!-- Testing -->
     <PackageVersion Include="xunit" Version="3.0.0-beta.2.24.4" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.0-beta.2.24.4" />
@@ -34,7 +30,6 @@
     <PackageVersion Include="Shouldly" Version="4.3.0" />
     <PackageVersion Include="NSubstitute" Version="5.3.0" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Testing" Version="9.0.0" />
-
     <!-- Source Generators -->
     <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="8.0.0" />
     <PackageVersion Include="SonarAnalyzer.CSharp" Version="9.32.0.97167" />

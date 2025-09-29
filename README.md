@@ -9,6 +9,7 @@ A professional, MCP-based alternative to Claude Code built in C# with clean arch
 - **Multiple Transports**: Stdio, HTTP, and WebSocket support
 - **Language-Specific Servers**: Dedicated MCP servers per programming language
 - **Streaming Responses**: Real-time response streaming from Claude
+- **Subscription Authentication**: Use your Claude Pro/Max subscription instead of API credits
 - **Professional Architecture**: Clean separation of concerns with proper abstractions
 
 ### Architecture Highlights
@@ -22,7 +23,7 @@ A professional, MCP-based alternative to Claude Code built in C# with clean arch
 
 ### Prerequisites
 - .NET 9 SDK
-- Anthropic API key
+- Claude Pro/Max subscription OR Anthropic API key
 - MCP servers (optional but recommended)
 
 ### Installation
@@ -33,18 +34,32 @@ cd claude-code-sharp
 dotnet build
 ```
 
-### Configuration
+### Authentication
 
-Configure your Anthropic API key using any of these methods:
+Choose one of these authentication methods:
 
-#### **Option 1: Environment Variable (Recommended)**
+#### **Option 1: Subscription Login (Recommended for Pro/Max users)**
+```bash
+# Login with your Claude Pro/Max subscription
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- auth login
+
+# Check authentication status
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- auth status
+
+# Logout when done
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- auth logout
+```
+
+#### **Option 2: API Key (For credit-based usage)**
+
+**Environment Variable:**
 ```bash
 export ANTHROPIC_API_KEY="your-anthropic-api-key-here"
 # OR
 export CLAUDECODE__ANTHROPIC__APIKEY="your-anthropic-api-key-here"
 ```
 
-#### **Option 2: Configuration File**
+**Configuration File:**
 Copy `appsettings.example.json` to `appsettings.json` and update:
 ```json
 {
@@ -56,7 +71,7 @@ Copy `appsettings.example.json` to `appsettings.json` and update:
 }
 ```
 
-#### **Option 3: User Secrets (Development)**
+**User Secrets (Development):**
 ```bash
 dotnet user-secrets set "ClaudeCode:Anthropic:ApiKey" "your-api-key" --project src/CyberdineDevelopment.ClaudeCode.CLI
 ```
@@ -76,6 +91,18 @@ dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- chat
 #### **Specify Model**
 ```bash
 dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- chat -m "Hello" --model claude-3-opus-20240229
+```
+
+#### **Authentication Management**
+```bash
+# Login with subscription
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- auth login
+
+# Check auth status
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- auth status
+
+# Logout
+dotnet run --project src/CyberdineDevelopment.ClaudeCode.CLI -- auth logout
 ```
 
 #### **Server Management**
@@ -109,6 +136,7 @@ src/
 #### Abstractions Layer
 - `IMcpClient` - MCP protocol client contract
 - `IAnthropicClient` - Anthropic API client contract
+- `IAuthenticationService` - OAuth subscription authentication
 - Transport abstractions and DTOs
 
 #### MCP Implementation
@@ -118,11 +146,14 @@ src/
 
 #### Anthropic Client
 - Native HTTP client for Anthropic API
+- Support for both API key and subscription authentication
+- Automatic client selection based on authentication method
 - Streaming response support
 - Proper error handling and retry logic
 
 #### CLI Interface
 - System.CommandLine integration
+- OAuth authentication flow for subscription login
 - Configuration management
 - Interactive and batch modes
 
